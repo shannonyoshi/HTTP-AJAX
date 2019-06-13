@@ -4,7 +4,7 @@ class FriendForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      friendInput: {
+      friendInput: this.props.activeFriend || {
         name: "",
         age: "",
         email: ""
@@ -12,23 +12,51 @@ class FriendForm extends React.Component {
     };
   }
 
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.activeFriend &&
+      prevProps.activeFriend !== this.props.activeFriend
+    ) {
+      this.setState({
+        friendInput: this.props.activeFriend
+      });
+    }
+  }
+
   handleChanges = e => {
-    this.setState({friendInput: {
-        ...this.state.friendInput,
-      [e.target.name]: e.target.value
-    }});
+    e.persist();
+    if (e.target.name === "age") {
+      e.target.value = parseInt(e.target.value);
+    }
+    this.setState(prevState => ({
+      friendInput: {
+        ...prevState.friendInput,
+        [e.target.name]: e.target.value
+      }
+    }));
   };
 
   submitFriend = e => {
-    this.props.addFriend(e, this.state.friendInput);
-    this.setState({ friendInput: { name: "", age: "", email: "" } });
+    if (this.props.activeFriend) {
+      this.props.updateFriend(e, this.state.friendInput);
+    } else {
+      this.props.addFriend(e, this.state.friendInput);
+    }
+    this.setState({
+      friendInput: {
+        name: "",
+        age: "",
+        email: "",
+        id: ""
+      }
+    });
   };
 
   render() {
     return (
       <div className="form-wrapper">
-        <h2>Add New Friend</h2>
-        <form onSubmit={this.submitFriend}>
+        <h2>{`${this.props.activeFriend ? "Update" : "Add New"} Friend`} </h2>
+        <form onSubmit={this.submitFriend} className="add-friend-form">
           <input
             type="text"
             name="name"
@@ -50,7 +78,9 @@ class FriendForm extends React.Component {
             onChange={this.handleChanges}
             value={this.state.friendInput.email}
           />
-          <button>Add Friend</button>
+          <button type="submit" className="add-friend-button">
+            {`${this.props.activeFriend ? 'Update': 'Add New'} Friend`}
+          </button>
         </form>
       </div>
     );
